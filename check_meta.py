@@ -5,20 +5,20 @@ import xlrd
 
 
 class CheckMeta(object):
-    def __init__(self):
-        pass
+    def __init__(self, file):
+        self.file = file
 
     # 打开excel文件
-    def open_excel(self, file=u'test.xlsx'):
+    def open_excel(self):
         try:
-            data = xlrd.open_workbook(file)
+            data = xlrd.open_workbook(self.file)
             return data
-        except Exception, e:
-            print str(e)
+        except Exception as e:
+            print(str(e))
 
     # 根据名称获取Excel表格中的数据   参数:file：Excel文件路径     colnameindex：表头列名所在行的索引  ，by_name：Sheet1名称
-    def excel_table_byname(self, file=u'test.xlsx', colnameindex=0, by_name=u'Sheet1'):
-        data = self.open_excel(file)  # 打开excel文件
+    def excel_table_byname(self, colnameindex=0, by_name=u'Sheet1'):
+        data = self.open_excel()  # 打开excel文件
         try:
             table = data.sheet_by_name(by_name)  # 根据sheet名字来获取excel中的sheet
         except Exception:
@@ -36,7 +36,7 @@ class CheckMeta(object):
         return list
 
     def get_info(self):
-        tables = self.excel_table_byname(u'meta.xlsx')
+        tables = self.excel_table_byname()
         text = []
         for rows in tables:
             for row in rows:
@@ -44,7 +44,7 @@ class CheckMeta(object):
         # print text
         infos = {}
         count = text.count('url')
-        for i in xrange(count):
+        for i in range(count):
             url_index = text.index('url') + 1
             url = text.pop(url_index)
             text.remove('url')
@@ -62,24 +62,28 @@ class CheckMeta(object):
 
     def open_website(self):
         infos = self.get_info()
+        text = {}
         for url, tdk in infos.items():
-            content = self.request_url(url)
+            try:
+                content = self.request_url(url)
+            except Exception:
+                continue
             if re.search(tdk['title'], content):
-                print "title_success"
+                text[url]['title'] = "title_success\n"
             else:
-                print u"url:{}\ntitle:{}\n------------------------------------------------------".format(url, tdk['title'])
+                text[url]['title'] = "title_success\n"
 
             if re.search(tdk['description'], content):
-                print "description_success"
+                text[url]['description'] = "description_success\n"
             else:
-                print u"url:{}\ndescription:{}\n------------------------------------------------------".format(url, tdk['description'])
+                text[url]['description'] = tdk['description']
 
             if re.search(tdk['keywords'], content):
-                print "keywords_success"
+                text[url]['keywords'] = "keywords_success\n"
             else:
-                print u"url:{}\nkeywords:{}\n-------------------------------------------------------".format(url, tdk['keywords'])
+                text[url]['keywords'] = tdk['keywords']
 
-
+        return text
 
     def request_url(self, url):
         import requests
@@ -94,7 +98,7 @@ class CheckMeta(object):
         }
 
         res = requests.get(url, headers=headers)
-        return res.content
+        return res.text
 
     def check_tdk(self):
         pass
