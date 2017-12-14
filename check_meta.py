@@ -36,7 +36,7 @@ class CheckMeta(object):
         return list
 
     def get_info(self):
-        tables = self.excel_table_byname(u'复星官网meta建议-2017.11.9.xlsx')
+        tables = self.excel_table_byname(u'meta.xlsx')
         text = []
         for rows in tables:
             for row in rows:
